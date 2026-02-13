@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Backend API Server
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: autosolar-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MQTT_BROKER_URL=mqtts://52340093aec74039a7680620b922eaa7.s1.eu.hivemq.cloud:8883
+      - MQTT_TOPIC=autosolar/sensor-data
+      - MQTT_COMMANDS_TOPIC=autosolar/commands
+      - MQTT_USERNAME=${MQTT_USERNAME}
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
+      - DATABASE_PATH=./solar_data.db
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./backend/solar_data.db:/app/solar_data.db
+    networks:
+      - autosolar-network
+    restart: unless-stopped
+
+  # Frontend Dashboard
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: autosolar-frontend
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_BACKEND_URL=http://localhost:3000
+    depends_on:
+      - backend
+    networks:
+      - autosolar-network
+    restart: unless-stopped
+
+networks:
+  autosolar-network:
+    driver: bridge
