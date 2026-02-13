@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Settings } from '../types';
 
 interface SettingsPanelProps {
@@ -13,6 +13,13 @@ export default function SettingsPanel({ settings, onSave }: SettingsPanelProps) 
   const [pwmMotor, setPwmMotor] = useState<number>(settings.pwm_motor);
   const [pwmActuator, setPwmActuator] = useState<number>(settings.pwm_actuator);
   const [tolerance, setTolerance] = useState<number>(settings.tolerance);
+
+  useEffect(() => {
+    setMode(settings.mode);
+    setPwmMotor(settings.pwm_motor);
+    setPwmActuator(settings.pwm_actuator);
+    setTolerance(settings.tolerance);
+  }, [settings]);
 
   const handleSave = () => {
     onSave({
@@ -51,7 +58,7 @@ export default function SettingsPanel({ settings, onSave }: SettingsPanelProps) 
                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
             }`}
           >
-            Actuator
+            แกนชัก
           </button>
         </div>
       </div>

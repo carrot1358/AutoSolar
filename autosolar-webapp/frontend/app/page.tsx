@@ -29,10 +29,11 @@ interface HistoricalPoint {
 }
 
 interface DailySummary {
-  date: string;
   avg_current: number;
   avg_power: number;
   max_power: number;
+  max_current: number;
+  min_current: number;
   count: number;
 }
 
@@ -42,7 +43,7 @@ export default function Home() {
 
   const [connected, setConnected] = useState(false);
   const [historicalData, setHistoricalData] = useState<HistoricalPoint[]>([]);
-  const [dailySummary, setDailySummary] = useState<DailySummary[]>([]);
+  const [dailySummary, setDailySummary] = useState<DailySummary | null>(null);
 
   // Track socket connection state
   useEffect(() => {
@@ -62,7 +63,7 @@ export default function Home() {
   useEffect(() => {
     fetch(`${BACKEND_URL}/api/data?limit=20`)
       .then((r) => r.json())
-      .then((data: HistoricalPoint[]) => setHistoricalData(data))
+      .then((res: { data: HistoricalPoint[] }) => setHistoricalData(res.data ?? []))
       .catch(() => {});
   }, []);
 
@@ -70,7 +71,9 @@ export default function Home() {
   useEffect(() => {
     fetch(`${BACKEND_URL}/api/stats`)
       .then((r) => r.json())
-      .then((data: DailySummary[]) => setDailySummary(data))
+      .then((row: DailySummary) => {
+        if (row && row.count) setDailySummary(row);
+      })
       .catch(() => {});
   }, []);
 
@@ -177,32 +180,34 @@ export default function Home() {
           </div>
 
           {/* Daily Summary */}
-          {dailySummary.length > 0 && (
+          {dailySummary && (
             <div className="rounded-xl bg-gray-800 p-4 shadow-lg">
-              <h2 className="mb-3 text-sm font-semibold text-gray-300">Daily Summary</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-700">
-                      <th className="pb-2 text-left text-xs font-medium text-gray-400">Date</th>
-                      <th className="pb-2 text-right text-xs font-medium text-gray-400">Avg Current</th>
-                      <th className="pb-2 text-right text-xs font-medium text-gray-400">Avg Power</th>
-                      <th className="pb-2 text-right text-xs font-medium text-gray-400">Max Power</th>
-                      <th className="pb-2 text-right text-xs font-medium text-gray-400">Readings</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {dailySummary.map((row) => (
-                      <tr key={row.date} className="border-b border-gray-700/50">
-                        <td className="py-2 text-gray-300">{row.date}</td>
-                        <td className="py-2 text-right text-gray-300">{row.avg_current.toFixed(2)} A</td>
-                        <td className="py-2 text-right text-gray-300">{row.avg_power.toFixed(1)} W</td>
-                        <td className="py-2 text-right text-yellow-400">{row.max_power.toFixed(1)} W</td>
-                        <td className="py-2 text-right text-gray-500">{row.count}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <h2 className="mb-3 text-sm font-semibold text-gray-300">Overall Summary</h2>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div className="rounded-lg bg-gray-700/60 p-3">
+                  <p className="text-xs text-gray-400">Avg Current</p>
+                  <p className="mt-1 text-lg font-semibold text-gray-100">{dailySummary.avg_current.toFixed(2)} A</p>
+                </div>
+                <div className="rounded-lg bg-gray-700/60 p-3">
+                  <p className="text-xs text-gray-400">Avg Power</p>
+                  <p className="mt-1 text-lg font-semibold text-gray-100">{dailySummary.avg_power.toFixed(1)} W</p>
+                </div>
+                <div className="rounded-lg bg-gray-700/60 p-3">
+                  <p className="text-xs text-gray-400">Max Power</p>
+                  <p className="mt-1 text-lg font-semibold text-yellow-400">{dailySummary.max_power.toFixed(1)} W</p>
+                </div>
+                <div className="rounded-lg bg-gray-700/60 p-3">
+                  <p className="text-xs text-gray-400">Max Current</p>
+                  <p className="mt-1 text-lg font-semibold text-gray-100">{dailySummary.max_current.toFixed(2)} A</p>
+                </div>
+                <div className="rounded-lg bg-gray-700/60 p-3">
+                  <p className="text-xs text-gray-400">Min Current</p>
+                  <p className="mt-1 text-lg font-semibold text-gray-100">{dailySummary.min_current.toFixed(2)} A</p>
+                </div>
+                <div className="rounded-lg bg-gray-700/60 p-3">
+                  <p className="text-xs text-gray-400">Total Readings</p>
+                  <p className="mt-1 text-lg font-semibold text-blue-400">{dailySummary.count}</p>
+                </div>
               </div>
             </div>
           )}
