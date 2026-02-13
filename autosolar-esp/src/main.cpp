@@ -1,0 +1,129 @@
+// CRITICAL: MQTT_MAX_PACKET_SIZE MUST be defined before PubSubClient include
+// Default is 256 bytes — settings JSON may exceed this
+#define MQTT_MAX_PACKET_SIZE 512
+
+#include <Arduino.h>
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <PubSubClient.h>
+#include <ArduinoJson.h>
+
+// ── WiFi credentials ──────────────────────────────────────────────────────────
+const char* ssid     = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
+
+// ── HiveMQ Cloud MQTT broker ──────────────────────────────────────────────────
+const char* mqtt_server   = "52340093aec74039a7680620b922eaa7.s1.eu.hivemq.cloud";
+const int   mqtt_port     = 8883;
+const char* mqtt_username = "YOUR_MQTT_USERNAME";
+const char* mqtt_password = "YOUR_MQTT_PASSWORD";
+
+// ── MQTT topics ───────────────────────────────────────────────────────────────
+const char* mqtt_sensor_topic   = "autosolar/sensor-data";
+const char* mqtt_commands_topic = "autosolar/commands";
+
+// ── Serial2 pins (ESP32 default GPIO 16=RX2, 17=TX2) ─────────────────────────
+#define SERIAL2_RX_PIN 16
+#define SERIAL2_TX_PIN 17
+
+// ── MQTT client objects ───────────────────────────────────────────────────────
+WiFiClientSecure espClient;
+PubSubClient     client(espClient);
+
+// ── MQTT callback — receives commands from backend, forwards to Nano ──────────
+void mqttCallback(char* topic, byte* payload, unsigned int length) {
+  if (String(topic) != mqtt_commands_topic) return;
+
+  JsonDocument doc;
+  DeserializationError err = deserializeJson(doc, payload, length);
+  if (err) return;
+
+  // Forward raw JSON command to Nano via Serial2
+  serializeJson(doc, Serial2);
+  Serial2.println();
+}
+
+// ── WiFi connection ───────────────────────────────────────────────────────────
+void connectWiFi() {
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+  }
+}
+
+// ── MQTT reconnect — subscribes to commands topic on every connect ────────────
+void reconnectMQTT() {
+  while (!client.connected()) {
+    String clientId = "ESP32-" + String(random(0xffff), HEX);
+    if (client.connect(clientId.c_str(), mqtt_username, mqtt_password)) {
+      // CRITICAL: re-subscribe on every reconnect
+      client.subscribe(mqtt_commands_topic);
+    } else {
+      delay(5000);
+    }
+  }
+}
+
+// ── Read Serial2 from Nano, remap short keys to long keys, publish to MQTT ───
+// Nano sends: {"ldr_l":..., "ldr_r":..., "cur":..., "pwr":...}
+// MQTT expects: {"ldr_left":..., "ldr_right":..., "current":..., "power":...}
+void republishSensorData() {
+  if (!Serial2.available()) return;
+
+  String line = Serial2.readStringUntil('\n');
+  line.trim();
+  if (line.length() == 0) return;
+
+  // Parse short-key JSON from Nano
+  JsonDocument inDoc;
+  DeserializationError err = deserializeJson(inDoc, line);
+  if (err) return;
+
+  // Re-serialize with long key names for backend + frontend
+  JsonDocument outDoc;
+  outDoc["ldr_left"]  = inDoc["ldr_l"];
+  outDoc["ldr_right"] = inDoc["ldr_r"];
+  outDoc["current"]   = inDoc["cur"];
+  outDoc["power"]     = inDoc["pwr"];
+
+  char buffer[256];
+  serializeJson(outDoc, buffer);
+
+  if (client.connected()) {
+    client.publish(mqtt_sensor_topic, buffer);
+  }
+}
+
+// ── Arduino setup ─────────────────────────────────────────────────────────────
+void setup() {
+  Serial.begin(115200);   // USB debug monitor
+
+  // Serial2 to Nano — 115200 baud (was 9600 — must match Nano Serial.begin(115200))
+  Serial2.begin(115200, SERIAL_8N1, SERIAL2_RX_PIN, SERIAL2_TX_PIN);
+
+  connectWiFi();
+
+  // Skip TLS certificate verification — acceptable for dev
+  espClient.setInsecure();
+
+  client.setServer(mqtt_server, mqtt_port);
+
+  // CRITICAL: setCallback MUST be called before connect()
+  client.setCallback(mqttCallback);
+
+  reconnectMQTT();
+}
+
+// ── Arduino loop ──────────────────────────────────────────────────────────────
+void loop() {
+  // Maintain MQTT connection
+  if (!client.connected()) {
+    reconnectMQTT();
+  }
+
+  // CRITICAL: client.loop() must be called every iteration to process incoming messages
+  client.loop();
+
+  // Forward Nano sensor data to MQTT with key remapping
+  republishSensorData();
+}
