@@ -4,3 +4,6 @@ node_modules
 .env.local
 package-lock.json
 next-env.d.ts
+
+**/solar_data.db
+**/solar_data.db-journal
