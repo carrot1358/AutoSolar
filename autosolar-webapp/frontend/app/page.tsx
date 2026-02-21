@@ -17,7 +17,12 @@ import LDRChart from './components/LDRChart';
 import SettingsPanel from './components/SettingsPanel';
 import type { Settings } from './types';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:3000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+if (!BACKEND_URL) {
+  throw new Error(
+    'Missing required environment variable: NEXT_PUBLIC_BACKEND_URL\nCreate a .env file based on .env.example'
+  );
+}
 
 interface HistoricalPoint {
   id: number;

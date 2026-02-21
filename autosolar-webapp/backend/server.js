@@ -1,5 +1,7 @@
 'use strict';
 
+require('dotenv').config();
+
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -7,11 +9,20 @@ const mqtt = require('mqtt');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 
+// ── Validate required environment variables ─────────────────────────────────
+const REQUIRED_ENV = ['MQTT_BROKER_URL', 'MQTT_USERNAME', 'MQTT_PASSWORD'];
+const missing = REQUIRED_ENV.filter(key => !process.env[key]);
+if (missing.length > 0) {
+  throw new Error(
+    `Missing required environment variables: ${missing.join(', ')}\nCreate a .env file based on .env.example`
+  );
+}
+
 // ── Environment variables ───────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
-const MQTT_BROKER_URL = process.env.MQTT_BROKER_URL || 'mqtts://52340093aec74039a7680620b922eaa7.s1.eu.hivemq.cloud:8883';
-const MQTT_USERNAME = process.env.MQTT_USERNAME || '';
-const MQTT_PASSWORD = process.env.MQTT_PASSWORD || '';
+const MQTT_BROKER_URL = process.env.MQTT_BROKER_URL;
+const MQTT_USERNAME = process.env.MQTT_USERNAME;
+const MQTT_PASSWORD = process.env.MQTT_PASSWORD;
 const MQTT_TOPIC = process.env.MQTT_TOPIC || 'autosolar/sensor-data';
 const MQTT_COMMANDS_TOPIC = process.env.MQTT_COMMANDS_TOPIC || 'autosolar/commands';
 const DATABASE_PATH = process.env.DATABASE_PATH || './solar_data.db';
