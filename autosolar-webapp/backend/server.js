@@ -43,6 +43,9 @@ app.use(express.json());
 // ── SQLite database setup ───────────────────────────────────────────────────
 const db = new sqlite3.Database(DATABASE_PATH);
 
+// ── In-memory cache for current mode ─────────────────────────────────────────
+let currentMode = 0; // default; overwritten when settings are loaded
+
 db.serialize(() => {
   // Sensor readings table (existing)
   db.run(`CREATE TABLE IF NOT EXISTS solar_data (
@@ -51,8 +54,12 @@ db.serialize(() => {
     ldr_right REAL,
     current REAL,
     power REAL,
+    mode INTEGER,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
+
+  // Migration: Add mode column to existing databases (idempotent)
+  db.run(`ALTER TABLE solar_data ADD COLUMN mode INTEGER`, () => {});
 
   // Settings table (new)
   db.run(`CREATE TABLE IF NOT EXISTS settings (
@@ -70,6 +77,11 @@ db.serialize(() => {
       [key, JSON.stringify(value)]
     );
   });
+});
+
+// Load persisted mode from database
+db.get('SELECT value FROM settings WHERE key = ?', ['mode'], (err, row) => {
+  if (!err && row) currentMode = JSON.parse(row.value);
 });
 
 // ── MQTT client setup ───────────────────────────────────────────────────────
@@ -124,8 +136,8 @@ mqttClient.on('message', (topic, message) => {
   const timestamp = new Date().toISOString();
 
   db.run(
-    'INSERT INTO solar_data (ldr_left, ldr_right, current, power) VALUES (?, ?, ?, ?)',
-    [ldr_left ?? null, ldr_right ?? null, current ?? null, power ?? null]
+    'INSERT INTO solar_data (ldr_left, ldr_right, current, power, mode) VALUES (?, ?, ?, ?, ?)',
+    [ldr_left ?? null, ldr_right ?? null, current ?? null, power ?? null, currentMode]
   );
 
   io.emit('sensorData', { ldr_left, ldr_right, current, power, timestamp });
@@ -185,6 +197,26 @@ app.get('/api/stats', (req, res) => {
   );
 });
 
+// ── GET /api/export/csv ────────────────────────────────────────────────────
+app.get('/api/export/csv', (req, res) => {
+  const modeFilter = req.query.mode !== undefined ? parseInt(req.query.mode, 10) : null;
+  const modeLabel = modeFilter === 0 ? '_motor' : modeFilter === 1 ? '_actuator' : '';
+  const [sql, params] = modeFilter !== null
+    ? ['SELECT * FROM solar_data WHERE mode = ? ORDER BY timestamp ASC', [modeFilter]]
+    : ['SELECT * FROM solar_data ORDER BY timestamp ASC', []];
+
+  db.all(sql, params, (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    const header = 'id,ldr_left,ldr_right,current,power,mode,timestamp\n';
+    const csv = header + rows.map(r =>
+      `${r.id},${r.ldr_left},${r.ldr_right},${r.current},${r.power},${r.mode ?? ''},${r.timestamp}`
+    ).join('\n');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="solar_data${modeLabel}.csv"`);
+    res.send(csv);
+  });
+});
+
 // ── GET /api/settings ───────────────────────────────────────────────────────
 app.get('/api/settings', (req, res) => {
   db.all('SELECT key, value FROM settings', [], (err, rows) => {
@@ -215,6 +247,9 @@ app.post('/api/settings', (req, res) => {
         );
       });
     });
+
+    // Update in-memory cache if mode was changed
+    if (incoming.mode !== undefined) currentMode = incoming.mode;
 
     // Publish complete merged settings to MQTT (retain: false — no stale replay)
     mqttClient.publish(MQTT_COMMANDS_TOPIC, JSON.stringify(merged), { qos: 0, retain: false });

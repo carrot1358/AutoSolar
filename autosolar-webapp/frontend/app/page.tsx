@@ -49,6 +49,7 @@ export default function Home() {
   const [connected, setConnected] = useState(false);
   const [historicalData, setHistoricalData] = useState<HistoricalPoint[]>([]);
   const [dailySummary, setDailySummary] = useState<DailySummary | null>(null);
+  const [exportMode, setExportMode] = useState<'all' | '0' | '1'>('all');
 
   // Track socket connection state
   useEffect(() => {
@@ -220,7 +221,31 @@ export default function Home() {
           {/* Historical Data */}
           {historicalData.length > 0 && (
             <div className="rounded-xl bg-gray-800 p-4 shadow-lg">
-              <h2 className="mb-3 text-sm font-semibold text-gray-300">Recent Readings</h2>
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="text-sm font-semibold text-gray-300">Recent Readings</h2>
+                <div className="flex items-center gap-2">
+                  {/* Mode filter buttons */}
+                  <div className="flex rounded-md overflow-hidden border border-gray-600 text-xs">
+                    {(['all', '0', '1'] as const).map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => setExportMode(m)}
+                        className={`px-2.5 py-1 ${exportMode === m ? 'bg-gray-500 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
+                      >
+                        {m === 'all' ? 'All' : m === '0' ? 'Motor' : 'Actuator'}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Export link */}
+                  <a
+                    href={`${BACKEND_URL}/api/export/csv${exportMode !== 'all' ? `?mode=${exportMode}` : ''}`}
+                    download
+                    className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-md"
+                  >
+                    Export CSV
+                  </a>
+                </div>
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
