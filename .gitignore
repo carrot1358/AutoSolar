@@ -7,3 +7,5 @@ next-env.d.ts
 
 **/solar_data.db
 **/solar_data.db-journal
+
+.worktrees
