@@ -1,0 +1,238 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Backend: Run (Hot Reload)",
+      "type": "shell",
+      "command": "npm i && npm run dev",
+      "options": {
+        "shell": {
+          "executable": "cmd",
+          "args": ["/d", "/c"]
+        },
+        "cwd": "${workspaceFolder}/autosolar-webapp/backend"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": true
+      },
+      "problemMatcher": [],
+      "isBackground": true
+    },
+    {
+      "label": "Backend: Run (Production)",
+      "type": "shell",
+      "command": "npm i && npm start",
+      "options": {
+        "shell": {
+          "executable": "cmd",
+          "args": ["/d", "/c"]
+        },
+        "cwd": "${workspaceFolder}/autosolar-webapp/backend"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Frontend: Run Dev Server",
+      "type": "shell",
+      "command": "npm i && npm run dev",
+      "options": {
+        "shell": {
+          "executable": "cmd",
+          "args": ["/d", "/c"]
+        },
+        "cwd": "${workspaceFolder}/autosolar-webapp/frontend"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": true
+      },
+      "problemMatcher": [],
+      "isBackground": true
+    },
+    {
+      "label": "Nano: Build Firmware",
+      "type": "shell",
+      "command": "pio run",
+      "options": {
+        "cwd": "${workspaceFolder}/autosolar-nano"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Nano: Upload Firmware",
+      "type": "shell",
+      "command": "pio run -t upload",
+      "options": {
+        "cwd": "${workspaceFolder}/autosolar-nano"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Nano: Serial Monitor",
+      "type": "shell",
+      "command": "pio device monitor --baud 115200",
+      "options": {
+        "cwd": "${workspaceFolder}/autosolar-nano"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": true
+      },
+      "problemMatcher": [],
+      "isBackground": true
+    },
+    {
+      "label": "ESP32: Build Firmware",
+      "type": "shell",
+      "command": "pio run",
+      "options": {
+        "cwd": "${workspaceFolder}/autosolar-esp"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "ESP32: Upload Firmware",
+      "type": "shell",
+      "command": "pio run -t upload",
+      "options": {
+        "cwd": "${workspaceFolder}/autosolar-esp"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "ESP32: Serial Monitor",
+      "type": "shell",
+      "command": "pio device monitor --baud 115200",
+      "options": {
+        "cwd": "${workspaceFolder}/autosolar-esp"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": true
+      },
+      "problemMatcher": [],
+      "isBackground": true
+    },
+    {
+      "label": "Open Terminal: Backend",
+      "type": "shell",
+      "command": "powershell -NoExit",
+      "options": {
+        "cwd": "${workspaceFolder}/autosolar-webapp/backend"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Open Terminal: Frontend",
+      "type": "shell",
+      "command": "powershell -NoExit",
+      "options": {
+        "cwd": "${workspaceFolder}/autosolar-webapp/frontend"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Open Terminal: Nano",
+      "type": "shell",
+      "command": "powershell -NoExit",
+      "options": {
+        "cwd": "${workspaceFolder}/autosolar-nano"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Open Terminal: ESP32",
+      "type": "shell",
+      "command": "powershell -NoExit",
+      "options": {
+        "cwd": "${workspaceFolder}/autosolar-esp"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🚀 Start Full Dev Stack",
+      "dependsOn": [
+        "Backend: Run (Hot Reload)",
+        "Frontend: Run Dev Server",
+        "Nano: Serial Monitor",
+        "ESP32: Serial Monitor"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "📱 Quick: Backend + Frontend",
+      "dependsOn": [
+        "Backend: Run (Hot Reload)",
+        "Frontend: Run Dev Server"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "⚙️ Firmware: Build Both (Nano + ESP32)",
+      "dependsOn": [
+        "Nano: Build Firmware",
+        "ESP32: Build Firmware"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    }
+  ]
+}
