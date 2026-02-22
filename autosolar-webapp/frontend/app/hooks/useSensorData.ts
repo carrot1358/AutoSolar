@@ -23,7 +23,7 @@ export function useSensorData(backendUrl: string) {
       setCurrentData(data);
 
       setChartData(prev => {
-        const point: ChartPoint = { timestamp, value: data.current };
+        const point: ChartPoint = { timestamp, value: Math.abs(data.current) };
         const updated = [...prev, point];
         return updated.length > BUFFER_SIZE ? updated.slice(-BUFFER_SIZE) : updated;
       });

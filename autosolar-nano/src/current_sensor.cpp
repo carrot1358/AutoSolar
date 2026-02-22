@@ -1,17 +1,15 @@
 #include "current_sensor.h"
 
-float readCurrent() {
-  long sum = 0;
-  for (int i = 0; i < CURRENT_SAMPLES; i++) {
-    sum += analogRead(CURRENT_SENSOR_PIN);
-  }
-  float raw = sum / (float)CURRENT_SAMPLES;
-  float voltage = (raw / 1023.0f) * 5.0f;
-  float current = (voltage - 2.5f) / 0.066f;
-  return current;
+// Running EMA of raw ADC value (init to ~midpoint 2.71V ≈ 554 raw)
+static float emaRaw = 554.0f;
+
+void sampleCurrent() {
+  int raw = analogRead(CURRENT_SENSOR_PIN);
+  emaRaw += CURRENT_EMA_ALPHA * (raw - emaRaw);
 }
 
-float readPower() {
-  float current = readCurrent();
-  return 12.0f * abs(current);
+float readCurrent() {
+  float voltage = (emaRaw / 1023.0f) * 5.0f;
+  float current = (voltage - ACS712_ZERO_POINT) / ACS712_SENSITIVITY;
+  return current;
 }

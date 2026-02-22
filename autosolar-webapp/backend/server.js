@@ -132,15 +132,16 @@ mqttClient.on('message', (topic, message) => {
     return;
   }
 
-  const { ldr_left, ldr_right, current, power } = payload;
+  const { ldr_left, ldr_right, current, power, mode } = payload;
   const timestamp = new Date().toISOString();
+  const resolvedMode = mode !== undefined ? mode : currentMode;
 
   db.run(
     'INSERT INTO solar_data (ldr_left, ldr_right, current, power, mode) VALUES (?, ?, ?, ?, ?)',
-    [ldr_left ?? null, ldr_right ?? null, current ?? null, power ?? null, currentMode]
+    [ldr_left ?? null, ldr_right ?? null, current ?? null, power ?? null, resolvedMode]
   );
 
-  io.emit('sensorData', { ldr_left, ldr_right, current, power, timestamp });
+  io.emit('sensorData', { ldr_left, ldr_right, current, power, mode: resolvedMode, timestamp });
 });
 
 // ── Socket.IO connection handler ────────────────────────────────────────────

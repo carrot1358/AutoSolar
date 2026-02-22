@@ -137,7 +137,7 @@ export default function Home() {
       {/* Current & Power Display */}
       <div className="mb-6">
         <PowerDisplay
-          current={currentData?.current ?? 0}
+          current={Math.abs(currentData?.current ?? 0)}
           power={currentData?.power ?? 0}
         />
       </div>
@@ -192,7 +192,7 @@ export default function Home() {
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <div className="rounded-lg bg-gray-700/60 p-3">
                   <p className="text-xs text-gray-400">Avg Current</p>
-                  <p className="mt-1 text-lg font-semibold text-gray-100">{dailySummary.avg_current.toFixed(2)} A</p>
+                  <p className="mt-1 text-lg font-semibold text-gray-100">{Math.abs(dailySummary.avg_current).toFixed(2)} A</p>
                 </div>
                 <div className="rounded-lg bg-gray-700/60 p-3">
                   <p className="text-xs text-gray-400">Avg Power</p>
@@ -204,11 +204,11 @@ export default function Home() {
                 </div>
                 <div className="rounded-lg bg-gray-700/60 p-3">
                   <p className="text-xs text-gray-400">Max Current</p>
-                  <p className="mt-1 text-lg font-semibold text-gray-100">{dailySummary.max_current.toFixed(2)} A</p>
+                  <p className="mt-1 text-lg font-semibold text-gray-100">{Math.abs(dailySummary.max_current).toFixed(2)} A</p>
                 </div>
                 <div className="rounded-lg bg-gray-700/60 p-3">
                   <p className="text-xs text-gray-400">Min Current</p>
-                  <p className="mt-1 text-lg font-semibold text-gray-100">{dailySummary.min_current.toFixed(2)} A</p>
+                  <p className="mt-1 text-lg font-semibold text-gray-100">{Math.abs(dailySummary.min_current).toFixed(2)} A</p>
                 </div>
                 <div className="rounded-lg bg-gray-700/60 p-3">
                   <p className="text-xs text-gray-400">Total Readings</p>
@@ -265,7 +265,7 @@ export default function Home() {
                         </td>
                         <td className="py-1.5 text-right text-blue-400">{row.ldr_left}</td>
                         <td className="py-1.5 text-right text-yellow-400">{row.ldr_right}</td>
-                        <td className="py-1.5 text-right text-gray-300">{row.current.toFixed(2)} A</td>
+                        <td className="py-1.5 text-right text-gray-300">{Math.abs(row.current).toFixed(2)} A</td>
                         <td className="py-1.5 text-right text-gray-300">{row.power.toFixed(1)} W</td>
                       </tr>
                     ))}

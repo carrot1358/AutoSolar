@@ -10,6 +10,15 @@
 #define RPWM_Output 5
 #define LPWM_Output 6
 
+// Limit switch pins (INPUT — LOW when pressed, external 10kΩ pull-up to 5V)
+#define LIMIT_SW_RPWM 3  // Blocks RPWM direction when pressed
+#define LIMIT_SW_LPWM 4  // Blocks LPWM direction when pressed
+
+// Relay pin (active LOW)
+// mode 0 → HIGH (relay off, NC closed) → NC lamp on
+// mode 1 → LOW  (relay energized, NO closed) → NO lamp on
+#define RELAY_PIN 2
+
 // Read both LDR values
 int readLDRLeft();
 int readLDRRight();

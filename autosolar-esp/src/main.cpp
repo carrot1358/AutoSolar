@@ -140,6 +140,7 @@ void republishSensorData() {
   outDoc["ldr_right"] = inDoc["ldr_r"];
   outDoc["current"]   = inDoc["cur"];
   outDoc["power"]     = inDoc["pwr"];
+  outDoc["mode"]      = inDoc["m"];
 
   char buffer[256];
   serializeJson(outDoc, buffer);
