@@ -70,7 +70,7 @@ db.serialize(() => {
   )`);
 
   // Seed default settings on first boot — INSERT OR IGNORE never overwrites existing values
-  const DEFAULTS = { mode: 0, pwm_motor: 150, pwm_actuator: 120, tolerance: 50 };
+  const DEFAULTS = { mode: 0, pwm_motor: 150, pwm_actuator: 120, tolerance: 50, current_zero_offset: 0 };
   Object.entries(DEFAULTS).forEach(([key, value]) => {
     db.run(
       'INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)',

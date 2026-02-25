@@ -87,6 +87,11 @@ export default function Home() {
     await saveSettings(newSettings);
   };
 
+  const zeroOffset = settings.current_zero_offset ?? 0;
+  const calibratedCurrent = Math.abs((currentData?.current ?? 0) - zeroOffset);
+  const calibratedPower = 12 * calibratedCurrent;
+  const calibratedChartData = chartData.map(pt => ({ ...pt, value: Math.abs(pt.value - zeroOffset) }));
+
   return (
     <main className="min-h-screen bg-gray-900 p-4 md:p-6">
       {/* Header */}
@@ -137,9 +142,23 @@ export default function Home() {
       {/* Current & Power Display */}
       <div className="mb-6">
         <PowerDisplay
-          current={Math.abs(currentData?.current ?? 0)}
-          power={currentData?.power ?? 0}
+          current={calibratedCurrent}
+          power={calibratedPower}
         />
+        <div className="mt-2 flex items-center gap-3">
+          <button
+            onClick={() => {
+              if (currentData) saveSettings({ ...settings, current_zero_offset: currentData.current });
+            }}
+            disabled={!currentData}
+            className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white text-sm rounded-md"
+          >
+            Calibrate Zero
+          </button>
+          <span className="text-xs text-gray-400">
+            Zero offset: {zeroOffset.toFixed(3)} A
+          </span>
+        </div>
       </div>
 
       {/* Two-column layout for charts + settings */}
@@ -156,7 +175,7 @@ export default function Home() {
           <div className="rounded-xl bg-gray-800 p-4 shadow-lg">
             <h2 className="mb-3 text-sm font-semibold text-gray-300">Real-time Current (A)</h2>
             <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+              <LineChart data={calibratedChartData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="timestamp" hide />
                 <YAxis
@@ -265,7 +284,7 @@ export default function Home() {
                         </td>
                         <td className="py-1.5 text-right text-blue-400">{row.ldr_left}</td>
                         <td className="py-1.5 text-right text-yellow-400">{row.ldr_right}</td>
-                        <td className="py-1.5 text-right text-gray-300">{Math.abs(row.current).toFixed(2)} A</td>
+                        <td className="py-1.5 text-right text-gray-300">{Math.abs(row.current - zeroOffset).toFixed(2)} A</td>
                         <td className="py-1.5 text-right text-gray-300">{row.power.toFixed(1)} W</td>
                       </tr>
                     ))}

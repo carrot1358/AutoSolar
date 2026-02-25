@@ -10,6 +10,7 @@ export interface Settings {
   pwm_motor: number;      // 0–255
   pwm_actuator: number;   // 0–255
   tolerance: number;      // 0–200
+  current_zero_offset?: number;
 }
 
 export interface ChartPoint {

@@ -8,6 +8,7 @@ const DEFAULT_SETTINGS: Settings = {
   pwm_motor: 150,
   pwm_actuator: 120,
   tolerance: 50,
+  current_zero_offset: 0,
 };
 
 export function useSettings(backendUrl: string, socket: Socket | null) {
